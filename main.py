@@ -89,6 +89,4 @@ while True:
         for c_index, pred in enumerate(col):
             if pred > improvement[0]:
                 improvement = [pred, column_names[p_index], ["increasing", "decreasing"][c_index], atr_chg[p_index]]
-    # print(pred_change)
-    print(improvement)
     print(f"Focusing on {improvement[2]} {improvement[1]} would be most effective.")
