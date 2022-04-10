@@ -7,14 +7,15 @@ import statsmodels.api as sm
 from sklearn.ensemble import *
 import numpy as np
 import xgboost as xgb
+from statistics import median
 
 df = pandas.read_excel("city_stats.xlsx")
 
 #    inputs
-input_start_col = "B"  # from this column
-input_end_col = "B"  # to this column
-output_col = "E"  # y Column
-predicting = True  # whether the model is trained with all the data
+input_start_col = "E"  # from this column
+input_end_col = "J"  # to this column
+output_col = "O"  # y Column
+predicting = False  # whether the model is trained with all the data
 #
 
 in_num1 = 0
@@ -38,7 +39,7 @@ y = df.iloc[:, out_num:out_num + 1].values.tolist()
 if predicting:
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-regressor = xgb.XGBRegressor()
+regressor = RandomForestRegressor(max_depth=3, min_samples_split=4, min_samples_leaf=2)
 
 if predicting:
     regressor.fit(X_train, np.ravel(y_train))
@@ -47,7 +48,7 @@ if predicting:
     pvalues = est2.pvalues
     y_pred = regressor.predict(X_test)
 
-    b_regressor = BaggingRegressor(regressor, n_estimators=20, max_features=len(X[0]),
+    b_regressor = BaggingRegressor(regressor, n_estimators=100, max_features=len(X[0]),
                                    max_samples=.5)
     b_regressor.fit(X_train, np.ravel(y_train))
 else:
@@ -57,13 +58,40 @@ else:
     pvalues = est2.pvalues
     y_pred = regressor.predict(X)
 
-    b_regressor = BaggingRegressor(regressor, n_estimators=20, max_features=len(X[0]),
+    b_regressor = BaggingRegressor(regressor, n_estimators=100, max_features=len(X[0]),
                                    max_samples=.5)
     b_regressor.fit(X, np.ravel(y))
 
+X = [list(x) for x in zip(*X)]
+atr_chg = []
+for col in range(2, len(X)):
+    atr_chg.append(median(X[col])/10)
+X = [list(x) for x in zip(*X)]
+print(atr_chg)
+column_names = df.iloc[:, in_num1+2:in_num2].columns.values.tolist()
+
 while True:
-    test_input = [float(x) for x in input("Input: ").split()]
+    print("")
+    chars_to_remove = list(',$%')
+    test_input = input("Enter " + ", ".join(column_names) + ": ").translate({ord(x): '' for x in chars_to_remove})
+    test_input = [float(x) for x in test_input.split()]
     print("Input:")
     print(test_input)
-    print("Output:")
-    print(b_regressor.predict([test_input]))
+    # print("Output:")
+    # print(b_regressor.predict([test_input]))
+
+    pred_change = []
+    for index, value in enumerate(test_input[2:]):
+        test_chg_max = test_input.copy()
+        test_chg_min = test_input.copy()
+        test_chg_max[index + 2] += atr_chg[index]
+        test_chg_min[index + 2] -= atr_chg[index]
+        pred_change.append([b_regressor.predict([test_chg_max])[0], b_regressor.predict([test_chg_min])[0]])
+    improvement = [0]
+    for p_index, col in enumerate(pred_change):
+        for c_index, pred in enumerate(col):
+            if pred > improvement[0]:
+                improvement = [pred, column_names[p_index], ["increasing", "decreasing"][c_index], atr_chg[p_index]]
+    # print(pred_change)
+    print(improvement)
+    print(f"Focusing on {improvement[2]} {improvement[1]} would be most effective.")
