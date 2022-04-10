@@ -1,12 +1,9 @@
 import string
 import pandas
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import *
-from sklearn import metrics
 import statsmodels.api as sm
 from sklearn.ensemble import *
 import numpy as np
-import xgboost as xgb
 from statistics import median
 
 df = pandas.read_excel("city_stats.xlsx")
