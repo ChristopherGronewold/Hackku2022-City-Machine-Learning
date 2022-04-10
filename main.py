@@ -65,12 +65,13 @@ for col in range(2, len(X)):
     atr_chg.append(median(X[col])/10)
 X = [list(x) for x in zip(*X)]
 print(atr_chg)
+column_names_all = df.iloc[:, in_num1:in_num2].columns.values.tolist()
 column_names = df.iloc[:, in_num1+2:in_num2].columns.values.tolist()
 
 while True:
     print("")
     chars_to_remove = list(',$%')
-    test_input = input("Enter " + ", ".join(column_names) + ": ").translate({ord(x): '' for x in chars_to_remove})
+    test_input = input("Enter " + ", ".join(column_names_all) + ": ").translate({ord(x): '' for x in chars_to_remove})
     test_input = [float(x) for x in test_input.split()]
     print("Input:")
     print(test_input)
